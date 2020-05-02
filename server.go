@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -30,8 +31,14 @@ type AllCharacters struct {
 	Characters []Character `json:"results"`
 }
 
-// getHomeWorld retreives Planet information for a Character
-func (character *Character) getHomeWorld(res http.ResponseWriter) {
+// PageVariables describes the page-level variables for template
+type PageVariables struct {
+	PageTitle  string
+	Characters []Character
+}
+
+// getHomeWorld retreives Planet information for a Character and updates the Character
+func (character *Character) getHomeWorld(res http.ResponseWriter) *Character {
 	var response *http.Response
 	var err error
 	if response, err = http.Get(character.HomeWorldURL); err != nil {
@@ -47,6 +54,8 @@ func (character *Character) getHomeWorld(res http.ResponseWriter) {
 	if err := json.Unmarshal(bytes, &character.HomeWorld); err != nil {
 		log.Print("Error parsing HomeWorld JSON ", err)
 	}
+
+	return character
 }
 
 // HomeHandler handles the "/" route and displays character information from Star Wars
@@ -69,9 +78,24 @@ func homeHandler(res http.ResponseWriter, req *http.Request) {
 		log.Print("Error parsing JSON ", err)
 	}
 
+	var updatedCharacters []Character
 	for _, character := range allCharacters.Characters {
-		character.getHomeWorld(res)
+		updatedCharacters = append(updatedCharacters, *character.getHomeWorld(res))
 	}
+
+	pageVariables := PageVariables{
+		PageTitle:  "Star Wars Characters",
+		Characters: updatedCharacters,
+	}
+
+	t, err := template.ParseFiles("index.html")
+
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		log.Print("Template parsing error:", err)
+	}
+
+	err = t.Execute(res, pageVariables)
 }
 
 func main() {

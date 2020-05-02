@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{.PageTitle}}</title>
+  </head>
+
+  <script type="text/javascript"></script>
+  <body>
+    <h1>All Characters</h1>
+    <div class="list">
+      {{if not .Characters }}
+      <h2>No Characters</h2>
+      {{else}} {{range .Characters}}
+      <div>
+        <p>Name: {{.Name}}</p>
+        <p>Home: {{.HomeWorld.Name}}</p>
+        <p>Population: {{.HomeWorld.Population}}</p>
+        <p>Terrain: {{.HomeWorld.Terrain}}</p>
+      </div>
+      {{end}} {{end}}
+    </div>
+  </body>
+</html>
