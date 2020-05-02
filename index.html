@@ -2,22 +2,94 @@
 <html>
   <head>
     <title>{{.PageTitle}}</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #121212;
+        color: #ffffff;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
+          Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, Helvetica Neue,
+          Arial, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol,
+          Noto Color Emoji;
+        margin: 0 0.5rem;
+      }
+
+      h1 {
+        color: #ffe81f;
+        font-size: 4rem;
+        text-align: center;
+      }
+
+      .list {
+        margin: 0 auto;
+      }
+
+      .characters-container {
+        display: grid;
+        grid-gap: 2rem;
+      }
+
+      .character {
+        border: 1px solid #ffe81f;
+        border-radius: 0.5rem;
+        padding: 1rem;
+      }
+
+      h3 {
+        font-size: 1.5rem;
+        letter-spacing: -0.04rem;
+        margin-bottom: 0.5rem;
+        text-decoration: underline;
+      }
+
+      .character-info {
+        letter-spacing: -0.04rem;
+        margin-bottom: 0.25rem;
+      }
+
+      @media screen and (min-width: 768px) {
+        .characters-container {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media screen and (min-width: 1020px) {
+        .list {
+          width: 75%;
+        }
+
+        .characters-container {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+    </style>
   </head>
 
   <script type="text/javascript"></script>
   <body>
-    <h1>All Characters</h1>
+    <h1>{{.PageTitle}}</h1>
     <div class="list">
       {{if not .Characters }}
       <h2>No Characters</h2>
-      {{else}} {{range .Characters}}
-      <div>
-        <p>Name: {{.Name}}</p>
-        <p>Home: {{.HomeWorld.Name}}</p>
-        <p>Population: {{.HomeWorld.Population}}</p>
-        <p>Terrain: {{.HomeWorld.Terrain}}</p>
+      {{else}}
+      <div class="characters-container">
+        {{range .Characters}}
+        <div class="character">
+          <h3>{{.Name}}</h3>
+          <p class="character-info">Home: {{.HomeWorld.Name}}</p>
+          <p class="character-info">Population: {{.HomeWorld.Population}}</p>
+          <p class="character-info">Terrain: {{.HomeWorld.Terrain}}</p>
+        </div>
+        {{end}} {{end}}
       </div>
-      {{end}} {{end}}
     </div>
   </body>
 </html>
