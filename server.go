@@ -28,6 +28,7 @@ type Character struct {
 
 // AllCharacters describes a list of characters in Star Wars
 type AllCharacters struct {
+	Next       string      `json:"next"`
 	Characters []Character `json:"results"`
 }
 
@@ -58,6 +59,23 @@ func (character *Character) getHomeWorld(res http.ResponseWriter) *Character {
 	return character
 }
 
+// generateTemplate applies a parsed template to the specified data object, and writes the output to wr
+func generateTemplate(res http.ResponseWriter, characters []Character) {
+	pageVariables := PageVariables{
+		PageTitle:  "Star Wars Characters",
+		Characters: characters,
+	}
+
+	t, err := template.ParseFiles("index.html")
+
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		log.Print("Template parsing error:", err)
+	}
+
+	err = t.Execute(res, pageVariables)
+}
+
 // HomeHandler handles the "/" route and displays character information from Star Wars
 func homeHandler(res http.ResponseWriter, req *http.Request) {
 	var response *http.Response
@@ -78,24 +96,35 @@ func homeHandler(res http.ResponseWriter, req *http.Request) {
 		log.Print("Error parsing JSON ", err)
 	}
 
+	for allCharacters.Next != "" {
+		if response, err = http.Get(allCharacters.Next); err != nil {
+			http.Error(res, err.Error(), http.StatusBadRequest)
+			log.Print("Error when requesting /api/people")
+		}
+
+		var bytes []byte
+		if bytes, err = ioutil.ReadAll(response.Body); err != nil {
+			http.Error(res, err.Error(), http.StatusBadRequest)
+			log.Print("Error occurred while reading res body: ", err)
+		}
+
+		var tempStruct AllCharacters
+		if err := json.Unmarshal(bytes, &tempStruct); err != nil {
+			log.Print("Error parsing JSON ", err)
+		}
+
+		for _, character := range tempStruct.Characters {
+			allCharacters.Characters = append(allCharacters.Characters, character)
+		}
+		allCharacters.Next = tempStruct.Next
+	}
+
 	var updatedCharacters []Character
 	for _, character := range allCharacters.Characters {
 		updatedCharacters = append(updatedCharacters, *character.getHomeWorld(res))
 	}
 
-	pageVariables := PageVariables{
-		PageTitle:  "Star Wars Characters",
-		Characters: updatedCharacters,
-	}
-
-	t, err := template.ParseFiles("index.html")
-
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusBadRequest)
-		log.Print("Template parsing error:", err)
-	}
-
-	err = t.Execute(res, pageVariables)
+	generateTemplate(res, updatedCharacters)
 }
 
 func main() {
